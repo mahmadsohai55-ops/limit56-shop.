@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Limit 56 | Sports Shop</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#f8f8f8; color:#333; }
+    header { background:#000; color:#fff; padding:15px; text-align:center; }
+    header h1 { margin:0; font-size:2rem; letter-spacing:2px; }
+    nav { margin-top:8px; }
+    nav a { color:yellow; margin:0 12px; text-decoration:none; font-weight:bold; }
+    .hero { background:#111 url('https://wallpapercave.com/wp/wp6332831.jpg') center/cover no-repeat; color:white; padding:80px 20px; text-align:center; }
+    .hero h2 { font-size:2.5rem; margin:0 0 10px; }
+    .products { display:flex; flex-wrap:wrap; justify-content:center; gap:20px; padding:30px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:220px; text-align:center; padding:15px; transition:transform 0.2s; }
+    .card:hover { transform:translateY(-6px); }
+    .card img { width:100%; border-radius:10px; }
+    .btn { display:inline-block; margin-top:10px; padding:10px 16px; background:black; color:white; border-radius:8px; text-decoration:none; font-weight:bold; cursor:pointer; }
+    .btn:hover { background:#e63946; }
+    footer { text-align:center; background:#000; color:#fff; padding:20px; margin-top:30px; }
+
+    /* Cart Drawer */
+    #cartDrawer { position:fixed; top:0; right:-400px; width:350px; height:100%; background:#fff; box-shadow:-2px 0 8px rgba(0,0,0,0.3); padding:20px; transition:0.3s; overflow-y:auto; }
+    #cartDrawer.open { right:0; }
+    #cartDrawer h2 { margin-top:0; }
+    .cart-item { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .cart-item img { width:50px; border-radius:6px; }
+    .cart-item button { background:red; border:none; color:white; padding:4px 8px; border-radius:5px; cursor:pointer; }
+    .cart-total { font-weight:bold; margin-top:15px; }
+    .close-cart { cursor:pointer; background:black; color:white; border:none; padding:5px 10px; border-radius:5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Limit 56</h1>
+    <nav>
+      <a href="#shoes">Shoes</a>
+      <a href="#football">Football Gear</a>
+      <a href="javascript:void(0)" onclick="toggleCart()">🛒 Cart (<span id="cartCount">0</span>)</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>Play Hard. Look Sharp.</h2>
+    <p>Premium shoes and football gear — Limit 56 style.</p>
+  </section>
+
+  <!-- Shoes Section -->
+  <section id="shoes" class="products"></section>
+
+  <!-- Football Gear -->
+  <section id="football" class="products"></section>
+
+  <!-- Cart Drawer -->
+  <div id="cartDrawer">
+    <button class="close-cart" onclick="toggleCart()">Close ✖</button>
+    <h2>Your Cart</h2>
+    <div id="cartItems"></div>
+    <p class="cart-total">Total: PKR <span id="cartTotal">0</span></p>
+  </div>
+
+  <footer>
+    <p>© 2025 Limit 56. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Products
+    const products = [
+      {id:1, name:"Limit 56 Runner", price:18000, image:"https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/713b9621-9d1f-4b62-b249-f72f1f0ef69d/defy-all-day-training-shoes.png", category:"shoes"},
+      {id:2, name:"Limit 56 Air Classic", price:20000, image:"https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/d5e4479d-cdcb-4573-b88a-f5f96455ce3f/air-force-1-07-shoes.png", category:"shoes"},
+      {id:3, name:"Limit 56 React Vision", price:19500, image:"https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/d9c2b2c3-8e12-42a0-bda8-2f7f7dc983fc/react-vision-shoes.png", category:"shoes"},
+      {id:4, name:"Limit 56 Phantom Boots", price:22000, image:"https://static.nike.com/a/images/c_limit,w_592,f_auto/t_product_v1/1c66f534-fb87-4c19-935f-43d58c9386c4/phantom-gx-ii-club-mg-low-top-football-boot.png", category:"football"},
+      {id:5, name:"Limit 56 GK Gloves", price:12000, image:"https://www.prodirectsport.com/-/media/prodirect/project/en/products/nike-gk-vapor-grip3-goalkeeper-gloves-white-black-volt-blue-259755.jpg", category:"football"},
+      {id:6, name:"Limit 56 Shin Pads", price:6500, image:"https://contents.mediadecathlon.com/p2396040/k$b92cfa7c0c76ee317f82a6cf95d7fcd4/football-shin-pads.jpg", category:"football"},
+    ];
+
+    // Cart
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    function renderProducts() {
+      ["shoes", "football"].forEach(cat => {
+        const section = document.getElementById(cat);
+        section.innerHTML = "";
+        products.filter(p => p.category===cat).forEach(p => {
+          section.innerHTML += `
+            <div class="card">
+              <img src="${p.image}" alt="${p.name}">
+              <h3>${p.name}</h3>
+              <p>PKR ${p.price}</p>
+              <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+            </div>
+          `;
+        });
+      });
+      updateCartCount();
+    }
+
+    function toggleCart() {
+      document.getElementById("cartDrawer").classList.toggle("open");
+      renderCart();
+    }
+
+    function addToCart(id) {
+      const item = products.find(p => p.id===id);
+      cart.push(item);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+    }
+
+    function removeFromCart(index) {
+      cart.splice(index,1);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      renderCart();
+      updateCartCount();
+    }
+
+    function renderCart() {
+      const container = document.getElementById("cartItems");
+      container.innerHTML = "";
+      let total = 0;
+      cart.forEach((item,i) => {
+        total += item.price;
+        container.innerHTML += `
+          <div class="cart-item">
+            <img src="${item.image}" alt="${item.name}">
+            <span>${item.name}</span>
+            <span>PKR ${item.price}</span>
+            <button onclick="removeFromCart(${i})">Remove</button>
+          </div>
+        `;
+      });
+      document.getElementById("cartTotal").innerText = total;
+    }
+
+    function updateCartCount() {
+      document.getElementById("cartCount").innerText = cart.length;
+    }
+
+    renderProducts();
+  </script>
+</body>
+</html>
